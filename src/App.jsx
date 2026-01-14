@@ -5,53 +5,6 @@ import { useState, useEffect } from 'react';
 // A Currents Media Solutions Product
 // ============================================
 
-// Team full names for Google Trends searches
-const TEAM_SEARCH_NAMES = {
-  'MIA': 'Miami Heat',
-  'PHX': 'Phoenix Suns',
-  'CHI': 'Chicago Bulls',
-  'HOU': 'Houston Rockets',
-  'MIN': 'Minnesota Timberwolves',
-  'MIL': 'Milwaukee Bucks',
-  'DEN': 'Denver Nuggets',
-  'NO': 'New Orleans Pelicans',
-  'NOP': 'New Orleans Pelicans',
-  'NYK': 'New York Knicks',
-  'BKN': 'Brooklyn Nets',
-  'LAL': 'Los Angeles Lakers',
-  'LAC': 'LA Clippers',
-  'BOS': 'Boston Celtics',
-  'GSW': 'Golden State Warriors',
-  'PHI': 'Philadelphia 76ers',
-  'DAL': 'Dallas Mavericks',
-  'ATL': 'Atlanta Hawks',
-  'WAS': 'Washington Wizards',
-  'CLE': 'Cleveland Cavaliers',
-  'OKC': 'Oklahoma City Thunder',
-  'SAC': 'Sacramento Kings',
-  'ORL': 'Orlando Magic',
-  'IND': 'Indiana Pacers',
-  'MEM': 'Memphis Grizzlies',
-  'SAS': 'San Antonio Spurs',
-  'POR': 'Portland Trail Blazers',
-  'UTA': 'Utah Jazz',
-  'CHA': 'Charlotte Hornets',
-  'DET': 'Detroit Pistons',
-  'TOR': 'Toronto Raptors',
-  // NFL
-  'KC': 'Kansas City Chiefs',
-  'SF': 'San Francisco 49ers',
-  'BUF': 'Buffalo Bills',
-  'DAL': 'Dallas Cowboys',
-  'PHI': 'Philadelphia Eagles',
-  // MLB
-  'NYY': 'New York Yankees',
-  'LAD': 'Los Angeles Dodgers',
-  // NHL
-  'EDM': 'Edmonton Oilers',
-  'FLA': 'Florida Panthers',
-};
-
 // Static data: ZIP to DMA mapping
 const ZIP_TO_DMA = {
   '10001': { dma: 501, name: 'New York', teams: ['NYK', 'BKN', 'NYY', 'NYM', 'NYR', 'NYI', 'NJD'] },
@@ -240,67 +193,6 @@ const SAMPLE_GAMES = [
   }
 ];
 
-// Heat Score Component
-function HeatScore({ score, trending, loading }) {
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'rgba(8, 145, 178, 0.1)' }}>
-        <div className="w-3 h-3 border border-slate-600 border-t-cyan-500 rounded-full animate-spin"></div>
-        <span className="text-[10px] text-slate-500">Loading...</span>
-      </div>
-    );
-  }
-
-  if (score === null || score === undefined) {
-    return null;
-  }
-
-  // Determine heat level (0-100 scale)
-  const heatLevel = score > 80 ? 'high' : score > 50 ? 'medium' : 'low';
-  
-  const heatStyles = {
-    high: {
-      bg: 'rgba(239, 68, 68, 0.15)',
-      text: '#f87171',
-      icon: '🔥',
-      label: 'HIGH INTEREST'
-    },
-    medium: {
-      bg: 'rgba(251, 191, 36, 0.15)',
-      text: '#fbbf24',
-      icon: '📈',
-      label: 'TRENDING'
-    },
-    low: {
-      bg: 'rgba(100, 116, 139, 0.15)',
-      text: '#94a3b8',
-      icon: '—',
-      label: 'BASELINE'
-    }
-  };
-
-  const style = heatStyles[heatLevel];
-
-  return (
-    <div 
-      className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-      style={{ backgroundColor: style.bg }}
-    >
-      <span className="text-sm">{style.icon}</span>
-      <div className="flex flex-col">
-        <span className="text-[10px] font-semibold tracking-wide" style={{ color: style.text }}>
-          {style.label}
-        </span>
-        <span className="text-[9px] text-slate-500">
-          Heat Score: {score}
-          {trending === 'up' && ' ↑'}
-          {trending === 'down' && ' ↓'}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function App() {
   const [zipCode, setZipCode] = useState('');
   const [market, setMarket] = useState(null);
@@ -308,71 +200,9 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [selectedLeague, setSelectedLeague] = useState('nba');
   const [dataSource, setDataSource] = useState('loading');
-  const [heatScores, setHeatScores] = useState({});
-  const [heatLoading, setHeatLoading] = useState(false);
-
-  // Fetch heat scores for displayed games
-  const fetchHeatScores = async (gamesList) => {
-    if (!gamesList || gamesList.length === 0) return;
-    
-    setHeatLoading(true);
-    
-    // Extract unique team pairs
-    const teamPairs = gamesList.map(game => {
-      const competition = game.competitions?.[0];
-      const homeAbbr = competition?.competitors?.find(c => c.homeAway === 'home')?.team?.abbreviation;
-      const awayAbbr = competition?.competitors?.find(c => c.homeAway === 'away')?.team?.abbreviation;
-      return {
-        gameId: game.id,
-        home: homeAbbr,
-        away: awayAbbr,
-        homeName: TEAM_SEARCH_NAMES[homeAbbr] || homeAbbr,
-        awayName: TEAM_SEARCH_NAMES[awayAbbr] || awayAbbr
-      };
-    }).filter(p => p.home && p.away);
-
-    try {
-      // Fetch scores for each game (batched to avoid rate limits)
-      const scores = {};
-      
-      for (const pair of teamPairs) {
-        try {
-          const response = await fetch('/.netlify/functions/heat-score', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ teams: [pair.homeName, pair.awayName] })
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            const homeScore = data.teams?.[pair.homeName]?.score || 0;
-            const awayScore = data.teams?.[pair.awayName]?.score || 0;
-            const combinedScore = Math.round((homeScore + awayScore) / 2);
-            const trending = data.teams?.[pair.homeName]?.trending === 'up' || 
-                           data.teams?.[pair.awayName]?.trending === 'up' ? 'up' : 'stable';
-            
-            scores[pair.gameId] = { score: combinedScore, trending };
-          }
-        } catch (err) {
-          console.log(`Failed to fetch heat score for ${pair.homeName} vs ${pair.awayName}`);
-        }
-        
-        // Small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-      
-      setHeatScores(scores);
-    } catch (err) {
-      console.error('Heat score fetch error:', err);
-    }
-    
-    setHeatLoading(false);
-  };
 
   const fetchGames = async (league) => {
     setLoading(true);
-    setHeatScores({}); // Reset heat scores when changing leagues
-    
     try {
       const sportPath = league === 'nba' ? 'basketball/nba' : 
                         league === 'nfl' ? 'football/nfl' :
@@ -387,17 +217,13 @@ function App() {
       if (data.events && data.events.length > 0) {
         setGames(data.events);
         setDataSource('live');
-        // Fetch heat scores after getting games
-        fetchHeatScores(data.events);
       } else {
         setGames(SAMPLE_GAMES);
         setDataSource('sample');
-        fetchHeatScores(SAMPLE_GAMES);
       }
     } catch (err) {
       setGames(SAMPLE_GAMES);
       setDataSource('sample');
-      fetchHeatScores(SAMPLE_GAMES);
     }
     setLoading(false);
   };
@@ -600,15 +426,7 @@ function App() {
       <section className="px-4 sm:px-6 py-8" style={{ backgroundColor: '#0a1628' }}>
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-4">
-              <h2 className="text-xs font-medium tracking-[0.2em] text-slate-400 uppercase">Today's Games</h2>
-              {heatLoading && (
-                <span className="text-[10px] text-cyan-400 flex items-center gap-2">
-                  <span className="inline-block w-2 h-2 border border-cyan-500 border-t-transparent rounded-full animate-spin"></span>
-                  Loading heat scores...
-                </span>
-              )}
-            </div>
+            <h2 className="text-xs font-medium tracking-[0.2em] text-slate-400 uppercase">Today's Games</h2>
             <span className="text-xs text-slate-600">{games.length} events</span>
           </div>
 
@@ -626,7 +444,6 @@ function App() {
               const awayTeam = competition?.competitors?.find(c => c.homeAway === 'away');
               const availability = getAvailabilityStatus(game, market);
               const isComplete = competition?.status?.type?.completed;
-              const gameHeat = heatScores[game.id];
 
               return (
                 <div 
@@ -634,24 +451,16 @@ function App() {
                   className="rounded-xl p-5 border transition-all hover:border-cyan-800/50"
                   style={{ 
                     backgroundColor: '#0d1d33',
-                    borderColor: gameHeat?.score > 70 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(8, 145, 178, 0.15)'
+                    borderColor: 'rgba(8, 145, 178, 0.15)'
                   }}
                 >
                   {/* Game Header */}
-                  <div className="flex justify-between items-start mb-4 gap-2">
-                    <div className="flex flex-col gap-2">
-                      <span className="text-[11px] text-slate-400 tracking-wide">
-                        {isComplete ? 'FINAL' : formatGameTime(game.date)}
-                      </span>
-                      {/* Heat Score */}
-                      <HeatScore 
-                        score={gameHeat?.score} 
-                        trending={gameHeat?.trending}
-                        loading={heatLoading && !gameHeat}
-                      />
-                    </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-[11px] text-slate-400 tracking-wide">
+                      {isComplete ? 'FINAL' : formatGameTime(game.date)}
+                    </span>
                     <span 
-                      className="text-[10px] font-semibold tracking-wide px-3 py-1 rounded-full flex-shrink-0"
+                      className="text-[10px] font-semibold tracking-wide px-3 py-1 rounded-full"
                       style={{
                         backgroundColor: 
                           availability.status === 'national' ? 'rgba(34, 197, 94, 0.2)' :
@@ -737,9 +546,9 @@ function App() {
               <span className="text-slate-600 tracking-wide uppercase">Data:</span>
               <span>ESPN API</span>
               <span className="text-slate-700">•</span>
-              <span>Google Trends</span>
-              <span className="text-slate-700">•</span>
               <span>Nielsen DMA</span>
+              <span className="text-slate-700">•</span>
+              <span>RSN Mapping</span>
             </div>
           </div>
           <div className="text-[11px] text-slate-600 leading-relaxed">
