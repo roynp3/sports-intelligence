@@ -748,7 +748,7 @@ export default function CurrentsSportsIntel() {
             <div className="text-sm mt-1" style={{ color: '#94a3b8' }}>
               DMA {market.dma}
             </div>
-            {market.teams.length > 0 && (
+            {market.teams && market.teams.length > 0 && (
               <div className="text-xs mt-2" style={{ color: '#64748b' }}>
                 Local teams: {market.teams.slice(0, 6).join(', ')}{market.teams.length > 6 ? '...' : ''}
               </div>
@@ -880,7 +880,7 @@ export default function CurrentsSportsIntel() {
                   
                   {/* Quick Info */}
                   <div className="flex flex-wrap gap-2 mt-4">
-                    {availability.streamingOptions.slice(0, 3).map((platform, idx) => (
+                    {(availability.streamingOptions || []).slice(0, 3).map((platform, idx) => (
                       <span 
                         key={idx}
                         className="text-xs px-2 py-1 rounded"
@@ -889,7 +889,7 @@ export default function CurrentsSportsIntel() {
                         {platform}
                       </span>
                     ))}
-                    {availability.streamingOptions.length > 3 && (
+                    {(availability.streamingOptions || []).length > 3 && (
                       <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: '#1e293b', color: '#64748b' }}>
                         +{availability.streamingOptions.length - 3} more
                       </span>
@@ -921,7 +921,7 @@ export default function CurrentsSportsIntel() {
                               <div key={idx}>
                                 <div className="font-medium text-sm" style={{ color: '#f8fafc' }}>{b.network}</div>
                                 <div className="text-xs" style={{ color: '#64748b' }}>
-                                  → {b.streamers.slice(0, 3).join(', ')}
+                                  → {(b.streamers || []).slice(0, 3).join(', ') || 'Check local listings'}
                                 </div>
                               </div>
                             ))}
@@ -961,9 +961,9 @@ export default function CurrentsSportsIntel() {
                                 <div className="font-medium text-sm" style={{ color: '#f8fafc' }}>
                                   {b.network} <span className="text-xs" style={{ color: '#64748b' }}>({b.marketType})</span>
                                 </div>
-                                {b.streamers.length > 0 && (
+                                {(b.streamers || []).length > 0 && (
                                   <div className="text-xs" style={{ color: '#64748b' }}>
-                                    → {b.streamers.slice(0, 2).join(', ')}
+                                    → {(b.streamers || []).slice(0, 2).join(', ')}
                                   </div>
                                 )}
                               </div>
