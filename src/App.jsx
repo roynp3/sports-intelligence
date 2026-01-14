@@ -5,9 +5,55 @@ import { useState, useEffect } from 'react';
 // A Currents Media Solutions Product
 // ============================================
 
+// Team full names for Google Trends searches
+const TEAM_SEARCH_NAMES = {
+  'MIA': 'Miami Heat',
+  'PHX': 'Phoenix Suns',
+  'CHI': 'Chicago Bulls',
+  'HOU': 'Houston Rockets',
+  'MIN': 'Minnesota Timberwolves',
+  'MIL': 'Milwaukee Bucks',
+  'DEN': 'Denver Nuggets',
+  'NO': 'New Orleans Pelicans',
+  'NOP': 'New Orleans Pelicans',
+  'NYK': 'New York Knicks',
+  'BKN': 'Brooklyn Nets',
+  'LAL': 'Los Angeles Lakers',
+  'LAC': 'LA Clippers',
+  'BOS': 'Boston Celtics',
+  'GSW': 'Golden State Warriors',
+  'PHI': 'Philadelphia 76ers',
+  'DAL': 'Dallas Mavericks',
+  'ATL': 'Atlanta Hawks',
+  'WAS': 'Washington Wizards',
+  'CLE': 'Cleveland Cavaliers',
+  'OKC': 'Oklahoma City Thunder',
+  'SAC': 'Sacramento Kings',
+  'ORL': 'Orlando Magic',
+  'IND': 'Indiana Pacers',
+  'MEM': 'Memphis Grizzlies',
+  'SAS': 'San Antonio Spurs',
+  'POR': 'Portland Trail Blazers',
+  'UTA': 'Utah Jazz',
+  'CHA': 'Charlotte Hornets',
+  'DET': 'Detroit Pistons',
+  'TOR': 'Toronto Raptors',
+  // NFL
+  'KC': 'Kansas City Chiefs',
+  'SF': 'San Francisco 49ers',
+  'BUF': 'Buffalo Bills',
+  'DAL': 'Dallas Cowboys',
+  'PHI': 'Philadelphia Eagles',
+  // MLB
+  'NYY': 'New York Yankees',
+  'LAD': 'Los Angeles Dodgers',
+  // NHL
+  'EDM': 'Edmonton Oilers',
+  'FLA': 'Florida Panthers',
+};
+
 // Static data: ZIP to DMA mapping
 const ZIP_TO_DMA = {
-  // New York DMA (501)
   '10001': { dma: 501, name: 'New York', teams: ['NYK', 'BKN', 'NYY', 'NYM', 'NYR', 'NYI', 'NJD'] },
   '10002': { dma: 501, name: 'New York', teams: ['NYK', 'BKN', 'NYY', 'NYM', 'NYR', 'NYI', 'NJD'] },
   '10003': { dma: 501, name: 'New York', teams: ['NYK', 'BKN', 'NYY', 'NYM', 'NYR', 'NYI', 'NJD'] },
@@ -19,7 +65,6 @@ const ZIP_TO_DMA = {
   '07030': { dma: 501, name: 'New York', teams: ['NYK', 'BKN', 'NYY', 'NYM', 'NYR', 'NYI', 'NJD'] },
   '11201': { dma: 501, name: 'New York', teams: ['NYK', 'BKN', 'NYY', 'NYM', 'NYR', 'NYI', 'NJD'] },
   '11211': { dma: 501, name: 'New York', teams: ['NYK', 'BKN', 'NYY', 'NYM', 'NYR', 'NYI', 'NJD'] },
-  // Los Angeles DMA (803)
   '90001': { dma: 803, name: 'Los Angeles', teams: ['LAL', 'LAC', 'LAD', 'LAA', 'LAK'] },
   '90012': { dma: 803, name: 'Los Angeles', teams: ['LAL', 'LAC', 'LAD', 'LAA', 'LAK'] },
   '90024': { dma: 803, name: 'Los Angeles', teams: ['LAL', 'LAC', 'LAD', 'LAA', 'LAK'] },
@@ -27,68 +72,53 @@ const ZIP_TO_DMA = {
   '90210': { dma: 803, name: 'Los Angeles', teams: ['LAL', 'LAC', 'LAD', 'LAA', 'LAK'] },
   '90401': { dma: 803, name: 'Los Angeles', teams: ['LAL', 'LAC', 'LAD', 'LAA', 'LAK'] },
   '91101': { dma: 803, name: 'Los Angeles', teams: ['LAL', 'LAC', 'LAD', 'LAA', 'LAK'] },
-  // Chicago DMA (602)
   '60601': { dma: 602, name: 'Chicago', teams: ['CHI', 'CHC', 'CWS'] },
   '60602': { dma: 602, name: 'Chicago', teams: ['CHI', 'CHC', 'CWS'] },
   '60614': { dma: 602, name: 'Chicago', teams: ['CHI', 'CHC', 'CWS'] },
   '60657': { dma: 602, name: 'Chicago', teams: ['CHI', 'CHC', 'CWS'] },
-  // Miami DMA (528)
   '33101': { dma: 528, name: 'Miami-Ft. Lauderdale', teams: ['MIA', 'FLA'] },
   '33139': { dma: 528, name: 'Miami-Ft. Lauderdale', teams: ['MIA', 'FLA'] },
   '33301': { dma: 528, name: 'Miami-Ft. Lauderdale', teams: ['MIA', 'FLA'] },
   '33131': { dma: 528, name: 'Miami-Ft. Lauderdale', teams: ['MIA', 'FLA'] },
-  // Phoenix DMA (753)
   '85001': { dma: 753, name: 'Phoenix', teams: ['PHX', 'ARI'] },
   '85004': { dma: 753, name: 'Phoenix', teams: ['PHX', 'ARI'] },
   '85251': { dma: 753, name: 'Phoenix', teams: ['PHX', 'ARI'] },
   '85281': { dma: 753, name: 'Phoenix', teams: ['PHX', 'ARI'] },
-  // Denver DMA (751)
   '80202': { dma: 751, name: 'Denver', teams: ['DEN', 'COL'] },
   '80203': { dma: 751, name: 'Denver', teams: ['DEN', 'COL'] },
   '80204': { dma: 751, name: 'Denver', teams: ['DEN', 'COL'] },
   '80206': { dma: 751, name: 'Denver', teams: ['DEN', 'COL'] },
-  // Houston DMA (618)
   '77001': { dma: 618, name: 'Houston', teams: ['HOU'] },
   '77002': { dma: 618, name: 'Houston', teams: ['HOU'] },
   '77019': { dma: 618, name: 'Houston', teams: ['HOU'] },
   '77030': { dma: 618, name: 'Houston', teams: ['HOU'] },
-  // Milwaukee DMA (617)
   '53201': { dma: 617, name: 'Milwaukee', teams: ['MIL'] },
   '53202': { dma: 617, name: 'Milwaukee', teams: ['MIL'] },
   '53203': { dma: 617, name: 'Milwaukee', teams: ['MIL'] },
-  // Minneapolis DMA (613)
   '55401': { dma: 613, name: 'Minneapolis-St. Paul', teams: ['MIN'] },
   '55402': { dma: 613, name: 'Minneapolis-St. Paul', teams: ['MIN'] },
   '55403': { dma: 613, name: 'Minneapolis-St. Paul', teams: ['MIN'] },
-  // New Orleans DMA (622)
   '70112': { dma: 622, name: 'New Orleans', teams: ['NO'] },
   '70113': { dma: 622, name: 'New Orleans', teams: ['NO'] },
   '70116': { dma: 622, name: 'New Orleans', teams: ['NO'] },
-  // Boston DMA (506)
   '02101': { dma: 506, name: 'Boston', teams: ['BOS'] },
   '02102': { dma: 506, name: 'Boston', teams: ['BOS'] },
   '02116': { dma: 506, name: 'Boston', teams: ['BOS'] },
-  // San Francisco DMA (807)
   '94102': { dma: 807, name: 'San Francisco-Oakland-San Jose', teams: ['GSW'] },
   '94103': { dma: 807, name: 'San Francisco-Oakland-San Jose', teams: ['GSW'] },
   '94105': { dma: 807, name: 'San Francisco-Oakland-San Jose', teams: ['GSW'] },
-  // Philadelphia DMA (504)
   '19101': { dma: 504, name: 'Philadelphia', teams: ['PHI'] },
   '19102': { dma: 504, name: 'Philadelphia', teams: ['PHI'] },
   '19103': { dma: 504, name: 'Philadelphia', teams: ['PHI'] },
-  // Dallas DMA (623)
   '75201': { dma: 623, name: 'Dallas-Ft. Worth', teams: ['DAL'] },
   '75202': { dma: 623, name: 'Dallas-Ft. Worth', teams: ['DAL'] },
   '75204': { dma: 623, name: 'Dallas-Ft. Worth', teams: ['DAL'] },
-  // Atlanta DMA (524)
   '30301': { dma: 524, name: 'Atlanta', teams: ['ATL'] },
   '30303': { dma: 524, name: 'Atlanta', teams: ['ATL'] },
   '30308': { dma: 524, name: 'Atlanta', teams: ['ATL'] },
-  // Washington DC DMA (511)
   '20001': { dma: 511, name: 'Washington, DC', teams: ['WAS'] },
   '20002': { dma: 511, name: 'Washington, DC', teams: ['WAS'] },
   '20003': { dma: 511, name: 'Washington, DC', teams: ['WAS'] },
-  // Richmond DMA (556)
   '23219': { dma: 556, name: 'Richmond-Petersburg', teams: [] },
   '23220': { dma: 556, name: 'Richmond-Petersburg', teams: [] },
   '23221': { dma: 556, name: 'Richmond-Petersburg', teams: [] },
@@ -130,6 +160,7 @@ const TEAM_MARKETS = {
   'MIL': { name: 'Milwaukee Bucks', dma: 617, rsn: 'FanDuel SN WI' },
   'DEN': { name: 'Denver Nuggets', dma: 751, rsn: 'Altitude' },
   'NO': { name: 'New Orleans Pelicans', dma: 622, rsn: 'Gulf Coast SN' },
+  'NOP': { name: 'New Orleans Pelicans', dma: 622, rsn: 'Gulf Coast SN' },
   'NYK': { name: 'New York Knicks', dma: 501, rsn: 'MSG' },
   'BKN': { name: 'Brooklyn Nets', dma: 501, rsn: 'YES Network' },
   'LAL': { name: 'Los Angeles Lakers', dma: 803, rsn: 'Spectrum SN' },
@@ -209,6 +240,67 @@ const SAMPLE_GAMES = [
   }
 ];
 
+// Heat Score Component
+function HeatScore({ score, trending, loading }) {
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'rgba(8, 145, 178, 0.1)' }}>
+        <div className="w-3 h-3 border border-slate-600 border-t-cyan-500 rounded-full animate-spin"></div>
+        <span className="text-[10px] text-slate-500">Loading...</span>
+      </div>
+    );
+  }
+
+  if (score === null || score === undefined) {
+    return null;
+  }
+
+  // Determine heat level (0-100 scale)
+  const heatLevel = score > 80 ? 'high' : score > 50 ? 'medium' : 'low';
+  
+  const heatStyles = {
+    high: {
+      bg: 'rgba(239, 68, 68, 0.15)',
+      text: '#f87171',
+      icon: '🔥',
+      label: 'HIGH INTEREST'
+    },
+    medium: {
+      bg: 'rgba(251, 191, 36, 0.15)',
+      text: '#fbbf24',
+      icon: '📈',
+      label: 'TRENDING'
+    },
+    low: {
+      bg: 'rgba(100, 116, 139, 0.15)',
+      text: '#94a3b8',
+      icon: '—',
+      label: 'BASELINE'
+    }
+  };
+
+  const style = heatStyles[heatLevel];
+
+  return (
+    <div 
+      className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+      style={{ backgroundColor: style.bg }}
+    >
+      <span className="text-sm">{style.icon}</span>
+      <div className="flex flex-col">
+        <span className="text-[10px] font-semibold tracking-wide" style={{ color: style.text }}>
+          {style.label}
+        </span>
+        <span className="text-[9px] text-slate-500">
+          Heat Score: {score}
+          {trending === 'up' && ' ↑'}
+          {trending === 'down' && ' ↓'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [zipCode, setZipCode] = useState('');
   const [market, setMarket] = useState(null);
@@ -216,9 +308,71 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [selectedLeague, setSelectedLeague] = useState('nba');
   const [dataSource, setDataSource] = useState('loading');
+  const [heatScores, setHeatScores] = useState({});
+  const [heatLoading, setHeatLoading] = useState(false);
+
+  // Fetch heat scores for displayed games
+  const fetchHeatScores = async (gamesList) => {
+    if (!gamesList || gamesList.length === 0) return;
+    
+    setHeatLoading(true);
+    
+    // Extract unique team pairs
+    const teamPairs = gamesList.map(game => {
+      const competition = game.competitions?.[0];
+      const homeAbbr = competition?.competitors?.find(c => c.homeAway === 'home')?.team?.abbreviation;
+      const awayAbbr = competition?.competitors?.find(c => c.homeAway === 'away')?.team?.abbreviation;
+      return {
+        gameId: game.id,
+        home: homeAbbr,
+        away: awayAbbr,
+        homeName: TEAM_SEARCH_NAMES[homeAbbr] || homeAbbr,
+        awayName: TEAM_SEARCH_NAMES[awayAbbr] || awayAbbr
+      };
+    }).filter(p => p.home && p.away);
+
+    try {
+      // Fetch scores for each game (batched to avoid rate limits)
+      const scores = {};
+      
+      for (const pair of teamPairs) {
+        try {
+          const response = await fetch('/.netlify/functions/heat-score', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ teams: [pair.homeName, pair.awayName] })
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const homeScore = data.teams?.[pair.homeName]?.score || 0;
+            const awayScore = data.teams?.[pair.awayName]?.score || 0;
+            const combinedScore = Math.round((homeScore + awayScore) / 2);
+            const trending = data.teams?.[pair.homeName]?.trending === 'up' || 
+                           data.teams?.[pair.awayName]?.trending === 'up' ? 'up' : 'stable';
+            
+            scores[pair.gameId] = { score: combinedScore, trending };
+          }
+        } catch (err) {
+          console.log(`Failed to fetch heat score for ${pair.homeName} vs ${pair.awayName}`);
+        }
+        
+        // Small delay between requests
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+      
+      setHeatScores(scores);
+    } catch (err) {
+      console.error('Heat score fetch error:', err);
+    }
+    
+    setHeatLoading(false);
+  };
 
   const fetchGames = async (league) => {
     setLoading(true);
+    setHeatScores({}); // Reset heat scores when changing leagues
+    
     try {
       const sportPath = league === 'nba' ? 'basketball/nba' : 
                         league === 'nfl' ? 'football/nfl' :
@@ -233,13 +387,17 @@ function App() {
       if (data.events && data.events.length > 0) {
         setGames(data.events);
         setDataSource('live');
+        // Fetch heat scores after getting games
+        fetchHeatScores(data.events);
       } else {
         setGames(SAMPLE_GAMES);
         setDataSource('sample');
+        fetchHeatScores(SAMPLE_GAMES);
       }
     } catch (err) {
       setGames(SAMPLE_GAMES);
       setDataSource('sample');
+      fetchHeatScores(SAMPLE_GAMES);
     }
     setLoading(false);
   };
@@ -325,7 +483,6 @@ function App() {
     <div className="min-h-screen text-slate-200" style={{ backgroundColor: '#0a1628' }}>
       {/* Hero Header with Background */}
       <header className="relative overflow-hidden border-b border-cyan-900/30">
-        {/* Background Image */}
         <div 
           className="absolute inset-0 opacity-40"
           style={{
@@ -336,10 +493,8 @@ function App() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a1628]/60 to-[#0a1628]" />
         
-        {/* Header Content */}
         <div className="relative z-10 px-4 sm:px-6 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 max-w-7xl mx-auto">
-            {/* Logo */}
             <div className="flex items-center gap-4">
               <img 
                 src="/logo.png" 
@@ -348,7 +503,6 @@ function App() {
               />
             </div>
             
-            {/* Status Badges */}
             <div className="flex items-center gap-3">
               <span className={`text-[10px] px-3 py-1.5 rounded font-medium border ${
                 dataSource === 'live' 
@@ -363,7 +517,6 @@ function App() {
             </div>
           </div>
           
-          {/* Product Title */}
           <div className="mt-8 mb-4 max-w-7xl mx-auto">
             <h1 className="text-2xl sm:text-3xl font-light text-white tracking-wide">
               Sports Intelligence Layer
@@ -447,7 +600,15 @@ function App() {
       <section className="px-4 sm:px-6 py-8" style={{ backgroundColor: '#0a1628' }}>
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xs font-medium tracking-[0.2em] text-slate-400 uppercase">Today's Games</h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-xs font-medium tracking-[0.2em] text-slate-400 uppercase">Today's Games</h2>
+              {heatLoading && (
+                <span className="text-[10px] text-cyan-400 flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 border border-cyan-500 border-t-transparent rounded-full animate-spin"></span>
+                  Loading heat scores...
+                </span>
+              )}
+            </div>
             <span className="text-xs text-slate-600">{games.length} events</span>
           </div>
 
@@ -465,6 +626,7 @@ function App() {
               const awayTeam = competition?.competitors?.find(c => c.homeAway === 'away');
               const availability = getAvailabilityStatus(game, market);
               const isComplete = competition?.status?.type?.completed;
+              const gameHeat = heatScores[game.id];
 
               return (
                 <div 
@@ -472,16 +634,24 @@ function App() {
                   className="rounded-xl p-5 border transition-all hover:border-cyan-800/50"
                   style={{ 
                     backgroundColor: '#0d1d33',
-                    borderColor: 'rgba(8, 145, 178, 0.15)'
+                    borderColor: gameHeat?.score > 70 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(8, 145, 178, 0.15)'
                   }}
                 >
                   {/* Game Header */}
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-[11px] text-slate-400 tracking-wide">
-                      {isComplete ? 'FINAL' : formatGameTime(game.date)}
-                    </span>
+                  <div className="flex justify-between items-start mb-4 gap-2">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[11px] text-slate-400 tracking-wide">
+                        {isComplete ? 'FINAL' : formatGameTime(game.date)}
+                      </span>
+                      {/* Heat Score */}
+                      <HeatScore 
+                        score={gameHeat?.score} 
+                        trending={gameHeat?.trending}
+                        loading={heatLoading && !gameHeat}
+                      />
+                    </div>
                     <span 
-                      className="text-[10px] font-semibold tracking-wide px-3 py-1 rounded-full"
+                      className="text-[10px] font-semibold tracking-wide px-3 py-1 rounded-full flex-shrink-0"
                       style={{
                         backgroundColor: 
                           availability.status === 'national' ? 'rgba(34, 197, 94, 0.2)' :
@@ -567,9 +737,9 @@ function App() {
               <span className="text-slate-600 tracking-wide uppercase">Data:</span>
               <span>ESPN API</span>
               <span className="text-slate-700">•</span>
-              <span>Nielsen DMA</span>
+              <span>Google Trends</span>
               <span className="text-slate-700">•</span>
-              <span>RSN Mapping</span>
+              <span>Nielsen DMA</span>
             </div>
           </div>
           <div className="text-[11px] text-slate-600 leading-relaxed">
