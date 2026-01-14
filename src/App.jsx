@@ -590,17 +590,19 @@ export default function CurrentsSportsIntel() {
     
     // Check for national broadcasts first
     if (broadcasts.national.length > 0) {
-      const allStreamers = [...new Set(broadcasts.national.flatMap(b => b.streamers))];
+      const broadcastNetworks = broadcasts.national.map(b => b.network);
+      const allStreamers = [...new Set(broadcasts.national.flatMap(b => b.streamers || []))];
       return {
         status: 'national',
         message: 'National Broadcast',
         isLocal: isLocalTeam,
         broadcasts: broadcasts.national,
+        broadcastNetworks: broadcastNetworks,
         streamingOptions: allStreamers,
         adSupported: broadcasts.national.some(b => b.adSupported),
         details: {
           type: 'national',
-          networks: broadcasts.national.map(b => b.network),
+          networks: broadcastNetworks,
           streaming: broadcasts.streaming
         }
       };
@@ -629,17 +631,19 @@ export default function CurrentsSportsIntel() {
       );
       
       if (localBroadcasts.length > 0) {
-        const allStreamers = [...new Set(localBroadcasts.flatMap(b => b.streamers))];
+        const broadcastNetworks = localBroadcasts.map(b => b.network);
+        const allStreamers = [...new Set(localBroadcasts.flatMap(b => b.streamers || []))];
         return {
           status: 'local',
           message: 'In-Market (Local RSN)',
           isLocal: true,
           broadcasts: localBroadcasts,
+          broadcastNetworks: broadcastNetworks,
           streamingOptions: allStreamers,
           adSupported: localBroadcasts.some(b => b.adSupported),
           details: {
             type: 'local',
-            networks: localBroadcasts.map(b => b.network),
+            networks: broadcastNetworks,
             streaming: broadcasts.streaming
           }
         };
@@ -882,11 +886,22 @@ export default function CurrentsSportsIntel() {
                   
                   {/* Quick Info */}
                   <div className="flex flex-wrap gap-2 mt-4">
+                    {/* Broadcast Networks */}
+                    {(availability.broadcastNetworks || []).map((network, idx) => (
+                      <span 
+                        key={`broadcast-${idx}`}
+                        className="text-xs px-2 py-1 rounded font-medium"
+                        style={{ backgroundColor: 'rgba(8, 145, 178, 0.2)', color: '#0891b2', border: '1px solid rgba(8, 145, 178, 0.3)' }}
+                      >
+                        📺 {network}
+                      </span>
+                    ))}
+                    {/* Streaming Platforms */}
                     {(availability.streamingOptions || []).slice(0, 3).map((platform, idx) => (
                       <span 
-                        key={idx}
+                        key={`stream-${idx}`}
                         className="text-xs px-2 py-1 rounded"
-                        style={{ backgroundColor: '#1e293b', color: '#94a3b8' }}
+                        style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)', color: '#a855f7' }}
                       >
                         {platform}
                       </span>
@@ -911,25 +926,30 @@ export default function CurrentsSportsIntel() {
                 {/* Expanded Details */}
                 {isExpanded && (
                   <div className="px-4 sm:px-5 pb-5 pt-2 border-t" style={{ borderColor: '#1e293b' }}>
-                    <div className="grid sm:grid-cols-3 gap-4">
+                    <div className="grid sm:grid-cols-2 gap-6">
                       {/* National Broadcasts */}
                       <div>
                         <h4 className="text-xs font-semibold tracking-wider mb-2" style={{ color: '#64748b' }}>
                           BROADCAST
                         </h4>
                         {broadcasts.national.length > 0 ? (
-                          <div className="space-y-2">
+                          <div className="space-y-1">
                             {broadcasts.national.map((b, idx) => (
-                              <div key={idx}>
-                                <div className="font-medium text-sm" style={{ color: '#f8fafc' }}>{b.network}</div>
-                                <div className="text-xs" style={{ color: '#64748b' }}>
-                                  → {(b.streamers || []).slice(0, 3).join(', ') || 'Check local listings'}
-                                </div>
+                              <div key={idx} className="font-medium text-sm" style={{ color: '#f8fafc' }}>
+                                {b.network}
+                              </div>
+                            ))}
+                          </div>
+                        ) : broadcasts.local.length > 0 ? (
+                          <div className="space-y-1">
+                            {broadcasts.local.map((b, idx) => (
+                              <div key={idx} className="font-medium text-sm" style={{ color: '#f8fafc' }}>
+                                {b.network} <span className="text-xs font-normal" style={{ color: '#64748b' }}>({b.marketType})</span>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <p className="text-xs" style={{ color: '#475569' }}>No national broadcast</p>
+                          <p className="text-xs" style={{ color: '#475569' }}>No broadcast info</p>
                         )}
                       </div>
                       
@@ -938,41 +958,16 @@ export default function CurrentsSportsIntel() {
                         <h4 className="text-xs font-semibold tracking-wider mb-2" style={{ color: '#64748b' }}>
                           STREAMING
                         </h4>
-                        {broadcasts.streaming.length > 0 ? (
+                        {(availability.streamingOptions || []).length > 0 ? (
                           <div className="space-y-1">
-                            {broadcasts.streaming.map((s, idx) => (
+                            {(availability.streamingOptions || []).map((platform, idx) => (
                               <div key={idx} className="text-sm" style={{ color: '#a855f7' }}>
-                                {s.network}
+                                {platform}
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <p className="text-xs" style={{ color: '#475569' }}>Via broadcast streamers</p>
-                        )}
-                      </div>
-                      
-                      {/* Local/RSN */}
-                      <div>
-                        <h4 className="text-xs font-semibold tracking-wider mb-2" style={{ color: '#64748b' }}>
-                          LOCAL RSN
-                        </h4>
-                        {broadcasts.local.length > 0 ? (
-                          <div className="space-y-2">
-                            {broadcasts.local.map((b, idx) => (
-                              <div key={idx}>
-                                <div className="font-medium text-sm" style={{ color: '#f8fafc' }}>
-                                  {b.network} <span className="text-xs" style={{ color: '#64748b' }}>({b.marketType})</span>
-                                </div>
-                                {(b.streamers || []).length > 0 && (
-                                  <div className="text-xs" style={{ color: '#64748b' }}>
-                                    → {(b.streamers || []).slice(0, 2).join(', ')}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-xs" style={{ color: '#475569' }}>No local coverage</p>
+                          <p className="text-xs" style={{ color: '#475569' }}>No streaming options</p>
                         )}
                       </div>
                     </div>
