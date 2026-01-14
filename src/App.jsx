@@ -440,12 +440,12 @@ const NATIONAL_BROADCAST_STREAMING = {
 // ============================================
 
 const LEAGUES = {
-  nba: { name: 'NBA', path: 'basketball/nba', color: '#C9082A', leaguePass: 'NBA League Pass' },
-  nfl: { name: 'NFL', path: 'football/nfl', color: '#013369', leaguePass: 'NFL Sunday Ticket' },
-  mlb: { name: 'MLB', path: 'baseball/mlb', color: '#002D72', leaguePass: 'MLB.TV' },
-  nhl: { name: 'NHL', path: 'hockey/nhl', color: '#000000', leaguePass: 'ESPN+' },
-  ncaam: { name: 'NCAAM', path: 'basketball/mens-college-basketball', color: '#0033A0', leaguePass: null },
-  ncaaw: { name: 'NCAAW', path: 'basketball/womens-college-basketball', color: '#FF6B00', leaguePass: null }
+  nba: { name: 'NBA', path: 'basketball/nba', color: '#C9082A', leaguePass: 'NBA League Pass', outOfMarketStreamers: ['Prime Video', 'NBA League Pass'], outOfMarketAdSupported: true },
+  nfl: { name: 'NFL', path: 'football/nfl', color: '#013369', leaguePass: 'NFL Sunday Ticket', outOfMarketStreamers: ['YouTube TV (Sunday Ticket)'], outOfMarketAdSupported: true },
+  mlb: { name: 'MLB', path: 'baseball/mlb', color: '#002D72', leaguePass: 'MLB.TV', outOfMarketStreamers: ['MLB.TV'], outOfMarketAdSupported: false },
+  nhl: { name: 'NHL', path: 'hockey/nhl', color: '#000000', leaguePass: 'ESPN+', outOfMarketStreamers: ['ESPN+'], outOfMarketAdSupported: true },
+  ncaam: { name: 'NCAAM', path: 'basketball/mens-college-basketball', color: '#0033A0', leaguePass: null, outOfMarketStreamers: ['ESPN+', 'Paramount+', 'Peacock'], outOfMarketAdSupported: true },
+  ncaaw: { name: 'NCAAW', path: 'basketball/womens-college-basketball', color: '#FF6B00', leaguePass: null, outOfMarketStreamers: ['ESPN+', 'Paramount+', 'Peacock'], outOfMarketAdSupported: true }
 };
 
 // ============================================
@@ -653,8 +653,8 @@ export default function CurrentsSportsIntel() {
       message: 'Out-of-Market',
       isLocal: false,
       broadcasts: [],
-      streamingOptions: leagueConfig.leaguePass ? [leagueConfig.leaguePass] : ['Check league streaming'],
-      adSupported: false,
+      streamingOptions: leagueConfig.outOfMarketStreamers || (leagueConfig.leaguePass ? [leagueConfig.leaguePass] : ['Check league streaming']),
+      adSupported: leagueConfig.outOfMarketAdSupported ?? false,
       details: {
         type: 'out-of-market',
         leaguePass: leagueConfig.leaguePass
@@ -677,11 +677,13 @@ export default function CurrentsSportsIntel() {
       {/* Header */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 sm:px-6 py-5 border-b" style={{ borderColor: 'rgba(8, 145, 178, 0.2)', background: 'linear-gradient(180deg, #0d1d33 0%, #0a1628 100%)' }}>
         <div className="flex items-center gap-4">
+          <img 
+            src="/logo.png" 
+            alt="Currents Media Solutions" 
+            className="h-10 sm:h-12 w-auto"
+          />
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-wide" style={{ color: '#f8fafc', letterSpacing: '0.05em' }}>
-              CURRENTS<span style={{ color: '#0891b2' }}>SPORTS</span>
-            </h1>
-            <p className="text-xs tracking-widest mt-1" style={{ color: '#64748b' }}>
+            <p className="text-xs tracking-widest" style={{ color: '#64748b' }}>
               SPORTS INTELLIGENCE LAYER
             </p>
           </div>
@@ -1008,12 +1010,14 @@ export default function CurrentsSportsIntel() {
       <footer className="px-4 sm:px-6 py-8 border-t" style={{ backgroundColor: '#0d1d33', borderColor: 'rgba(8, 145, 178, 0.15)' }}>
         <div className="max-w-7xl mx-auto flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h3 className="text-lg font-bold tracking-wide" style={{ color: '#f8fafc' }}>
-                CURRENTS<span style={{ color: '#0891b2' }}>SPORTS</span>
-              </h3>
-              <p className="text-xs mt-1" style={{ color: '#64748b' }}>
-                Sports Intelligence Layer by Currents Media Solutions
+            <div className="flex items-center gap-3">
+              <img 
+                src="/logo.png" 
+                alt="Currents Media Solutions" 
+                className="h-8 w-auto opacity-80"
+              />
+              <p className="text-xs" style={{ color: '#64748b' }}>
+                Sports Intelligence Layer
               </p>
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs" style={{ color: '#64748b' }}>
