@@ -6,15 +6,13 @@ export default {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-      },
       colors: {
-        currents: {
-          dark: '#0a1628',
-          navy: '#0d1d33',
-          cyan: '#06b6d4',
-        }
+        'currents-dark': '#0a1628',
+        'currents-card': '#0f172a',
+        'currents-cyan': '#0891b2',
+      },
+      fontFamily: {
+        'sans': ['Inter', 'system-ui', 'sans-serif'],
       }
     },
   },
