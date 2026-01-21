@@ -1,7 +1,7 @@
 {
-  "name": "currents-sports-intelligence",
-  "version": "2.0.0",
-  "description": "Sports Intelligence Layer - Full DMA Coverage",
+  "name": "currents-sports-media-planner",
+  "version": "1.0.0",
+  "description": "Sports Media Planning Platform by Currents Media Solutions",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
